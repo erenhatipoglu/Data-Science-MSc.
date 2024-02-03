@@ -1,4 +1,4 @@
-
+# https://www.kaggle.com/datasets/fedesoriano/body-fat-prediction-dataset
 bodyfat <- read.csv("C:\\Users\\erenh\\OneDrive\\lenova\\deu data science YL\\olasılık\\final\\bodyfat.csv")
 
 library(dplyr)
