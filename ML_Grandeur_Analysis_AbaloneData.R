@@ -23,7 +23,7 @@ abalone_data$Sex <- as.factor(abalone_data$Sex)
 X <- abalone_data[, -which(names(abalone_data) == "Rings")]
 y <- abalone_data$Rings
 
-# Set the seed for reproducibility (replace '123' with the last three digits of your student number)
+# Set the seed for reproducibility
 set.seed(089)
 
 # Splitting the data into training and test sets (70-30 split)
