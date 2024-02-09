@@ -1,4 +1,4 @@
-salary <- read.csv("C:/Users/erenh/OneDrive/lenova/deu data science YL/denetimli öğrenme/ödev1/Salary.csv")
+salary <- read.csv("Salary.csv")
 salary
 
 install.packages("plotly")
