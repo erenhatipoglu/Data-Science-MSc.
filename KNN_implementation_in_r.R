@@ -4,7 +4,7 @@ library(class)
 library(caTools)
 library(psych)
 
-wine <- read.csv("C:\\Users\\erenh\\OneDrive\\lenova\\deu data science YL\\denetimli öğrenme\\ödev2\\wine.csv")
+wine <- read.csv("wine.csv")
 
 describe(wine)
 
