@@ -9,8 +9,8 @@ library(caret)
 library(klaR)  
 library(heplots)
 
-abalone_data <- read.csv("C:\\Users\\erenh\\OneDrive\\lenova\\deu data science YL\\denetimli öğrenme\\sınav2\\abalone_veriseti.data")
-veriseti_açıklama <- read.csv("C:\\Users\\erenh\\OneDrive\\lenova\\deu data science YL\\denetimli öğrenme\\sınav2\\abalone_açıklama.names")
+abalone_data <- read.csv("abalone_dataset.data")
+abalone_exp <- read.csv("abalone_explanation.names")
 
 # Assign column names (based on standard abalone dataset attributes)
 colnames(abalone_data) <- c("Sex", "Length", "Diameter", "Height", "WholeWeight",
@@ -423,4 +423,3 @@ auc_lr
 auc_rfc
 auc_lda
 auc_qda
-
