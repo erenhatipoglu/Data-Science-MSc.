@@ -1,5 +1,5 @@
 ---
-title: "İstatistiksel Hesaplama ve Programlama için R - Ödev Sunumu"
+title: "Presentation of the 'Naniar' Package"
 author: "Eren Hatipoğlu"
 output: github_document
 bibliography: tidyref3.bib
@@ -15,14 +15,14 @@ library(dplyr)
 library(ggplot2)
 ```
 
-## Makale Hakkında
+## About the Article
 
 -   "Expanding Tidy Data Principles to Facilitate Missing Data Exploration, Visualization, and Assessment of Imputations"
 -   Tierney ve Cook (2023)
 -   Journal of Statistical Software
--   "Naniar" pakediyle yeni fonksiyonlar sunarak kayıp veri analizi ve görselleştirmesi iyileştirilmiştir.
+-   Missing data analysis and visualization has been improved by offering new functions with the "Naniar" package.
 
-## Makale Kullanılan Metodlar
+## Methods
 
 1)  Tidy Data Principles
 
@@ -30,9 +30,9 @@ library(ggplot2)
 
     ![](görseller/nabulardata.JPG)
     
-3)  Kayıp Verilerin Görsel ve Sayısal Özetleri:
+3)  Visual and Numerical Summaries of Missing Data:
 
-    | Değişken | n_miss | pct_miss |
+    | Variable | n_miss | pct_miss |
     |----------|--------|----------|
     | Ozone    | 37     | 24.2     |
     | Solar.R  | 7      | 4.6      |
@@ -41,7 +41,7 @@ library(ggplot2)
     | Month    | 0      | 0.0      |
     | Day      | 0      | 0.0      |
 
-## Veri Seti
+## Dataset
 
 ```{r sleep-dataset, echo = TRUE}
 data("sleep", package = "VIM")
@@ -58,16 +58,16 @@ Missing Completely at Random (MCAR) Test:
 mcar_test(sleep)
 ```
 
-### Kayıp Veri İşlemleri
+### Missing Data Operations
 
 ```{r sleep-dataset2, echo = TRUE}
-# Her satırdaki kayıp değerlerin sayısını gösteren kolon
+# Column showing the number of missing values in each row.
 sleep <- add_n_miss(sleep)
-# Her satırdaki kayıp değerlerin oranını gösteren kolon
+# Column showing the proportion of missing values in each row.
 sleep <- add_prop_miss(sleep)
-# Her bir satırda kayıp değer olup olmadığını gösteren kolon.
+# Column showing whether there are missing values in each row.
 sleep <- add_any_miss(sleep)
-# Kayıp veri gruplarını gösteren kolon.
+# Column showing missing data groups.
 sleep <- add_miss_cluster(sleep)
 ```
 ```{r sleep-dataset3, echo=FALSE, results='asis'}
@@ -77,14 +77,14 @@ cat('</div>')
 ```
 
 
-Kayıp veri temsilinde kullanılan işaretlerin taranması:
+Scanning the signals used to represent missing data:
 ```{r sleep-dataset4, echo = TRUE}
 miss_val <- c("N/A", "Null", "NaN", "-99")
 miss_scan_count(sleep, search = miss_val)
 ```
 
 
-Sleep verisetinin nabular data'ya çevrilmesi:
+Converting sleep data to nabular data:
 ```{r sleep-dataset5, echo = TRUE}
 sleep_nabular <- nabular(sleep)
 ```
@@ -95,13 +95,12 @@ cat('</div>')
 ```
 
 
-Kayıp verilerdeki örüntüleri incelemek için geçici olarak "10% below the range" kayıp veri ataması:
+Temporary missing data assignment of "10% below the range" to examine patterns in missing data:
 ```{r sleep-dataset7, echo = TRUE, warning=FALSE}
 sleep_imputed <- impute_below_all(sleep_nabular)
 ```
 
-
-Geçici kayıp veri ataması alternatif olarak ortalama veya medyan kullanılarak da yapılabilir:
+Temporary imputation of missing data can alternatively be done using the mean or median:
 ```{r sleep-dataset8, echo = TRUE}
 # sleep_imputed <- impute_mean_all(sleep_nabular)
 # sleep_imputed <- impute_median_all(sleep_nabular)
@@ -113,7 +112,7 @@ cat('</div>')
 ```
 
 
-Density plot ile kayıp verilerin dağılımının incelenmesi:
+DExamining the distribution of missing data with density plot:
 ```{r sleep-dataset10, echo = TRUE, warning=FALSE}
 ggplot() +
   geom_density(data = sleep, aes(x = Sleep, fill = "Original"), alpha = 0.5, na.rm = TRUE) +
@@ -123,58 +122,60 @@ ggplot() +
   theme_minimal()
 ```
 
-### Naniar Pakedinde Sunulan Grafik Fonksiyonları
+### Graphics Functions Offered in Naniar Package
 
 ```{r sleep-dataset11, echo = TRUE, warning=FALSE}
-# Her bir değişkendeki kayıp değerlerin grafiği
+# Plot of missing values in each variable
 gg_miss_var(sleep)
 
-# Her bir satırdaki kayıp verilerin grafiği
+# Plot of missing data in each row
 gg_miss_case(sleep)
 
-# Karmaşık kayıp veri örüntülerinin görselleştirilmesi
+# Visualization of complex missing data patterns
 gg_miss_upset(sleep)
 
-# Kayıplığa genel bir bakış
+# An overview of loss
 vis_miss(sleep)
 ```
 
-### Naniar Pakedinde Sunulan Sayısal Özet Fonksiyonları
+### Numeric Summary Functions Offered in the Naniar Package
 
 ```{r sleep-dataset12, echo = TRUE, warning=FALSE}
-n_miss(sleep) # toplam kayıp veri sayısı
-prop_miss(sleep) # kayıp verilerin oranı
-pct_miss(sleep) # kayıp verilerin yüzdesi
+n_miss(sleep) # total number of lost data
+prop_miss(sleep) # proportion of missing data
+pct_miss(sleep) # percentage of missing data
 ```
 
 ```{r sleep-dataset13, echo = TRUE, warning=FALSE}
-# Değişken bazında özet
+# Summary by variable
 miss_var_summary(sleep)
 
-# Değişken bazında özet tablosu
+# Summary table by variable
 miss_var_table(sleep)
 
-# Satır bazında özet
+# Summary by column
 miss_case_summary(sleep)
 
-# Satır bazında özet tablosu
+# Summary by row
 miss_case_table(sleep)
 ```
 
-## Avantaj ve Dezavantajlar
+## Advantages and Disadvantages
 
-Avantajlar:
+Advantages:
 
--   Grafikler: Kayıp verileri görselleştirip aralarındaki bağlantıyı görmek için başarılı grafikler sunuyor.
--   Detaylı Analiz: Yüzeysel veya detaylı analizler yapmak için başarılı fonksiyonlar sunuyor.
--   Tidyverse ile Uyumluluk: Tidyverse ile entegre olarak geliştirilmiş, tidyverse yaklaşımıyla çalışanlar için kullanışlı olacak bir paket.
+-   Graphs: Provides successful graphs to visualize missing data and see the connection between them.
+-   Detailed Analysis: Offers successful functions to perform superficial or detailed analysis.
+-   Compatibility with Tidyverse: A package developed integrated with Tidyverse that will be useful for those working with the tidyverse approach.
 
-Dezavantajlar:
+Disadvantages:
 
--   Keşifsel Analiz Odağı: Keşifsel kayıp veri analizi vurgulanmış fakat istatistiksel testler veya detaylı analitik metodlar üzerinde durulmamıştır.
--   R Programlama Dili Odağı: R ve Tidyverse bazlı olduğu için başka programlama dillerini tercih edenler tarafından kullanılamayacaktır bu yüzden potansiyel kullanıcı kitlesi dardır.
--   Büyük Verisetlerindeki Performans: Büyük bir veriyle karşılaşıldığında performansı düşebilir, bu konu için daha efektif yaklaşımlar gerçekleştirilebilir.
+-   Exploratory Analysis Focus: Exploratory missing data analysis is emphasized but statistical tests or detailed analytical methods are not emphasized.
+-   R Programming Language Focus: Since it is based on R and Tidyverse, it cannot be used by those who prefer other programming languages, so the potential user base is narrow.
+-   Performance in Large Datasets: When faced with large data, performance may decrease, and more effective approaches can be implemented for this issue.
 
-## Kaynaklar
+## References
+
+Tierney, N., & Cook, D. (2023). Expanding Tidy data principles to facilitate missing data exploration, visualization and assessment of imputations. Journal of Statistical Software, 105(7). https://doi.org/10.18637/jss.v105.i07 
 
 
