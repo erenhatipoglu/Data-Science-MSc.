@@ -21,18 +21,18 @@ describe(selected_variables)
 
 par(mfrow=c(3,5))
 
-hist(sampled_bodyfat$Density) #normal dağılıma en yakın
+hist(sampled_bodyfat$Density) #closest one to normal distribution
 hist(sampled_bodyfat$BodyFat)
 hist(sampled_bodyfat$Age)
 hist(sampled_bodyfat$Weight)
-hist(sampled_bodyfat$Height) #soldan çarpık
+hist(sampled_bodyfat$Height) #left skewed
 hist(sampled_bodyfat$Neck)
 hist(sampled_bodyfat$Chest)
 hist(sampled_bodyfat$Abdomen)
 hist(sampled_bodyfat$Hip) 
 hist(sampled_bodyfat$Thigh)
 hist(sampled_bodyfat$Knee)
-hist(sampled_bodyfat$Ankle) #sağdan çarpık
+hist(sampled_bodyfat$Ankle) #right skewed
 hist(sampled_bodyfat$Biceps) 
 hist(sampled_bodyfat$Forearm) 
 hist(sampled_bodyfat$Wrist)
