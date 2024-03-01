@@ -51,7 +51,7 @@ head(sleep)
 data("sleep", package = "VIM")
 describe(sleep)
 ```
-## Naniar Pakedinin Uygulanması
+## Application of Naniar package
 
 Missing Completely at Random (MCAR) Test:
 ```{r sleep-dataset1, echo = TRUE}
