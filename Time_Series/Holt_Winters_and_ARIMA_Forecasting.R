@@ -121,15 +121,9 @@ Box.test(comp_arima4$residuals, lag = 6, type = "Ljung-Box")
 Box.test(comp_arima4$residuals, lag = 12, type = "Ljung-Box")
 Box.test(comp_arima4$residuals, lag = 24, type = "Ljung-Box")
 checkresiduals(comp_arima4)
-shapiro.test(comp_arima4$residuals)
-res_log <- log(comp_arima4$residuals)
-qqnorm(res_log)
-qqline(res_log)
-shapiro.test(res_log)
 
 #According to the Box-Ljung test and checkresiduals function, there is no autocorrelation between the residuals.
-#However, according to the Shapiro-Wilk test, the residues are not normally distributed. 
-#Therefore, the logarithm of the residuals was taken and when the Shapiro test was applied again, it was found to be normally distributed.
+#According to the Shapiro-Wilk test, the residuals are normally distributed.
 
 ### Forecasting
 
