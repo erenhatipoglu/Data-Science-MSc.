@@ -1,0 +1,162 @@
+---
+title: "Time Series Forecasting of Computer Prices"
+author: "Eren Hatipoglu"
+date: 
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r}
+library(TTR)
+library(forecast)
+library(tseries)
+library(lmtest)
+```
+
+```{r}
+comp <- scan("https://robjhyndman.com/tsdldata/data/computer.dat",skip = 0)
+
+comp_ts <- ts(comp, start = c(2000,1), frequency = 12)
+
+plot(comp_ts)
+```
+
+There is no seasonality, random shocks and trends may exist.
+
+### Decomposition
+
+```{r}
+comp_decompose <- decompose(comp_ts, type="additive")
+plot(comp_decompose)
+new_comp <- comp_decompose$random * comp_decompose$trend
+plot(new_comp)
+lines(comp_ts, col=5)
+```
+
+The graph obtained when we separate it into its components and remove seasonality.
+
+### Exponential Smoothing
+
+```{r}
+comp_holt <- HoltWinters(comp_ts, beta=F, gamma = F)
+comp_holt
+comp_holt$SSE
+plot(comp_holt)
+
+comp_holt2 <- HoltWinters(comp_ts, beta=T, gamma = F) #Trend bileşeni var olan daha iyi çıkıyor
+comp_holt2
+comp_holt2$SSE
+plot(comp_holt2)
+
+comp_holt_fore <- forecast(comp_holt2, h=5)
+comp_holt_fore
+plot(comp_holt_fore)
+```
+
+We see that the Holt-Winters exponential smoothing method gives better results when the trend (beta = TRUE) is added to the function. When Beta is false, the Error Sum of Squares is 2.6 times higher than the other one. This shows that there is a difference of 2.6 times between what actually happened and what was predicted.
+Alpha values are high in both, which means more weight is given to the latest observations.
+When the prediction is made, the graph with confidence intervals can be observed above.
+
+### Farkının alınması
+
+```{r}
+adf.test(comp_ts)
+comp_diff <- diff(comp_ts, diff=1)
+plot(comp_diff)
+comp_diff2 <- diff(comp_ts, diff=2) #(d değeri)
+plot(comp_diff2)
+```
+
+Orijinal zaman serisi ACF test sonucuna göre durağan olmadığı için 1. ve 2.dereceden farkları alınıp durağanlaştırıldı.
+2.dereceden farkı alındığında seri durağan hale gelmiş görünüyor fakat 1.dereceden fark alındığında durağanlaşmadı.
+
+### Augmented Dickey-Fuller Test
+
+```{r}
+adf.test(comp_diff)
+adf.test(comp_diff2) #Sadece diff2 durağan oldu
+```
+2.dereceden farkını alıp ACF testini uyguladığımızda sıfır hipotezini reddederiz ve serinin durağan hale geldiğini söyleriz. 
+
+### ACF ve Partial-ACF Grafikleri 
+
+```{r}
+acf(comp_diff2, lag.max=50) #ar (p) değerini bulmak için
+pacf(comp_diff2, lag.max=50) #ma (q) değerini bulmak için
+```
+
+İki grafikte de cut-off gözlemlenmektedir, anlamlı otokorelasyon yoktur denebilir.
+
+### Geçici Modeller
+
+```{r}
+comp_arima1 <- arima(comp_ts, order=c(0,2,2))
+comp_arima1
+coeftest(comp_arima1)
+tsdiag(comp_arima1)
+
+comp_arima2 <- arima(comp_ts, order=c(2,2,2))
+comp_arima2
+coeftest(comp_arima2)
+tsdiag(comp_arima2)
+
+comp_arima3 <- auto.arima(comp_ts) #auto.arima
+comp_arima3
+coeftest(comp_arima3)
+tsdiag(comp_arima3)
+
+comp_arima4 <- arima(comp_ts, order=c(2,2,0)) #Seçilen model
+comp_arima4
+coeftest(comp_arima4)
+tsdiag(comp_arima4)
+
+comp_arima5 <- arima(comp_ts, order=c(2,2,1)) 
+comp_arima5
+coeftest(comp_arima5)
+tsdiag(comp_arima5)
+```
+
+Lag'lara bakarak çeşitli ARIMA modelleri oluşturuldu. Çeşitli modeller denendi fakat AIC değeri en düşük seçilen modelde:
+- p değeri için ilk iki lag'i göz önüne alarak 2 değeri verildi.
+- d değeri için 2 dereceden fark seçildi.
+- q değeri için ilk anlamlı lag göz önüne alınarak 1 değeri verildi.
+
+Coeftest'lere baktığımızda autoarima'da SMA(1)'in anlamlı olmadığını görüyoruz. Seçilen modelin coefficient testine baktığımızda AR(1) ve AR(2)'nin de anlamlı olduğunu görüyoruz. 
+
+### Box-Ljung ve Shapiro test
+
+```{r}
+Box.test(comp_arima4$residuals, lag = 6, type = "Ljung-Box")
+Box.test(comp_arima4$residuals, lag = 12, type = "Ljung-Box")
+Box.test(comp_arima4$residuals, lag = 24, type = "Ljung-Box")
+checkresiduals(comp_arima4)
+shapiro.test(comp_arima4$residuals)
+res_log <- log(comp_arima4$residuals)
+qqnorm(res_log)
+qqline(res_log)
+shapiro.test(res_log)
+```
+
+Box-Ljung teste ve checkresiduals fonksiyonuna göre artıklar arasında otokorelasyon yok.
+Fakat Shapiro-Wilk testine göre artıklar normal dağılmıyor. Bu yüzden artıkların logaritması alındı ve tekrar Shapiro testi uygulandığında normal dağıldığı sonucu çıktı.
+
+### Öngörümleme
+
+```{r}
+arima_fore <- forecast(comp_arima4, h=5)
+plot(arima_fore)
+predict(arima_fore)
+accuracy(arima_fore)
+```
+Seçilen modelle yapılan ARIMA öngörümleme grafiği yukarıda görülebilir.
+
+### Accuracy
+
+```{r}
+accuracy(arima_fore)
+accuracy(auto.arima(comp_ts))
+```
+Auto Arima ile yapılan öngörümlemenin hata değerleri ve MAPE değeri, seçilen modele göre daha düşük.
