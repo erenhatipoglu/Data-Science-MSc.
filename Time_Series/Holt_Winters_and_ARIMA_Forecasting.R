@@ -11,20 +11,22 @@ plot(comp_ts)
 
 #There is no seasonality, random shocks and trends may exist.
 
-### Decomposition
-
+### Decomposition and removal of the seasonality
 
 comp_decompose <- decompose(comp_ts, type="additive")
 plot(comp_decompose)
-new_comp <- comp_decompose$random * comp_decompose$trend
+new_comp <- comp_ts - comp_decompose$seasonal
 plot(new_comp)
-lines(comp_ts, col=5)
 
 
 #The graph obtained when we separate it into its components and remove seasonality.
 
-### Exponential Smoothing
+#Smoothing Moving Average
 
+comp_sma <- SMA(comp_ts, n=10)
+plot(comp_sma)
+
+### Exponential Smoothing
 
 comp_holt <- HoltWinters(comp_ts, beta=F, gamma = F)
 comp_holt
@@ -78,7 +80,7 @@ plot(comp_ts)
 acf(comp_diff2, lag.max=50) #ar (p) 
 pacf(comp_diff2, lag.max=50) #ma (q) 
 
-#İki grafikte de cut-off gözlemlenmektedir, anlamlı otokorelasyon yoktur denebilir.
+#Cut-off is observed in both graphs, it can be said that there is no significant autocorrelation.
 
 ### Temporary Models
 
@@ -109,9 +111,10 @@ tsdiag(comp_arima5)
 
 
 #Various ARIMA models were created by looking at the lags. Various models were tried, but the model with the lowest AIC value was:
+
 #- The p value was given a value of 2, taking into account the first two lags.
 #- A difference of 2 degrees was chosen for the d value.
-#- The value of q was given as 1, considering the first significant lag.
+#- The value of q was given as 0.
 
 #When we look at Coeftests, we see that SMA(1) is not significant in autoarima. When we look at the coefficient test of the selected model, we see that AR(1) and AR(2) are also significant.
 
@@ -129,6 +132,8 @@ checkresiduals(comp_arima4)
 
 arima_fore <- forecast(comp_arima4, h=5)
 plot(arima_fore)
+auto_arima_fore <- forecast(comp_arima3, h=5)
+plot(auto_arima_fore)
 predict(arima_fore)
 accuracy(arima_fore)
 
@@ -140,3 +145,4 @@ accuracy(arima_fore)
 accuracy(auto.arima(comp_ts))
 
 #The error values and MAPE value of the prediction made with Auto Arima are lower than the selected model.
+#Yet Auto Arima chooses the non-stationary state of the time series, therefore our model is more reliable.
