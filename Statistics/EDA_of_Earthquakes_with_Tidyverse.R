@@ -1,5 +1,4 @@
-earth <- read.csv("D:/deu data science YL/2.donem/kesifsel/donem_odevi/quake.csv")
-
+# Load the required libraries
 library(tidyverse)
 library(psych)
 library(dplyr)
@@ -13,29 +12,35 @@ library(cluster)
 library(leaflet)
 library(mice)
 
+# Read the dataset
+earth <- read.csv("D:/deu data science YL/2.donem/kesifsel/donem_odevi/quake.csv")
 
+# Display the first few rows of the dataset
 head(earth)
+# Display the structure of the dataset
 str(earth)
+# Display the dimensions of the dataset
 dim(earth)
+# Display summary statistics of the dataset
 summary(earth)
+# Check for any missing values in the dataset
 anyNA(earth)
 
-
-# Kay??p verilerin oldu??u kolonlar??n belirlenmesi
+# Identify columns with missing values
 columns_with_na <- earth %>%
   summarise(across(everything(), ~sum(is.na(.)))) %>%
   pivot_longer(cols = everything(), names_to = "column", values_to = "na_count") %>%
   filter(na_count > 0) %>%
   pull(column)
 
-# Say??sal ve kategorik de??i??kenlerin ayr??lmas??
+# Separate numeric and categorical variables
 numeric_vars <- earth %>% select(where(is.numeric))
 categorical_vars <- earth %>% select(where(is.character))
 
-# Say??sal verilerin KNN kullanarak impute edilmesi
+# Impute missing values in numeric variables using KNN
 numeric_vars_imputed <- kNN(numeric_vars, k = sqrt(nrow(numeric_vars)))
 
-# Kategorik verilerin mod kullan??larak impute edilmesi
+# Impute missing values in categorical variables using mode
 impute_mode <- function(x) {
   x[is.na(x)] <- as.character(getmode(x))
   return(x)
@@ -49,33 +54,30 @@ getmode <- function(v) {
 categorical_vars_imputed <- categorical_vars %>% 
   mutate(across(everything(), impute_mode))
 
-# Verisetinin atanm???? verilerle g??ncellenmesi
+# Update the dataset with imputed values
 earth[names(numeric_vars)] <- numeric_vars_imputed[names(numeric_vars)]
 earth[names(categorical_vars)] <- categorical_vars_imputed[names(categorical_vars)]
 
+# Check if there are any missing values remaining
 earth %>% anyNA
 
-
-
-# Numerik de??i??kenler i??in ??zet
+# Summary statistics for numeric variables
 summary_stats <- earth %>%
   select_if(is.numeric) %>%
   describe()
 
 summary_stats
 
-
-# Say??sal de??i??kenler i??in histogram
+# Histogram for numeric variables
 earth %>%
   select_if(is.numeric) %>%
   gather() %>%
   ggplot(aes(value)) +
   geom_histogram() +
   facet_wrap(~key, scales = "free") +
-  labs(title = "Say??sal De??i??kenlerin Histogramlar??")
+  labs(title = "Histograms of Numeric Variables")
 
-
-# Korelasyon matrisi
+# Correlation matrix
 correlation_matrix <- earth %>%
   select_if(is.numeric) %>%
   cor()
@@ -85,10 +87,9 @@ ggcorrplot(correlation_matrix,
            hc.order = TRUE,
            type = "lower",
            lab = TRUE,         
-           title = "Say??sal De??i??kenlerin Korelasyon Matrisi")
+           title = "Correlation Matrix of Numeric Variables")
 
-
-# ??zet istatistiklerin group by ile ????kar??lmas??
+# Summary statistics grouped by 'type'
 earth %>%
   group_by(type) %>%
   summarise(
@@ -98,54 +99,48 @@ earth %>%
     sd_depth = sd(depth)
   )
 
-
-# Boxplot
+# Boxplot of magnitude by earthquake type
 earth %>%
   ggplot(aes(x = type, y = mag)) +
   geom_boxplot() +
   labs(title = "Boxplot of Magnitude by Earthquake Type")
 
+# Advanced graphics for the research problem using tidyverse functions
 
-# 4- tidyverse fonksiyonlari ile arastirma probleminize yonelik gelismis grafikler olusturun.
-
-# Time series plot
-
-# Tidyverse kullanarak 'time'?? date format??na d??n????t??rme
+# Convert 'time' to date format using tidyverse
 earth <- earth %>%
   mutate(time = ymd_hms(time))
 
+# Filter data for a specific date range
 earth_subset <- earth %>%
   filter(date(time) >= as.Date("2024-01-01") & date(time) <= as.Date("2024-03-31"))
 
+# Create a time series object for magnitude
 earth_ts <- ts(earth_subset$mag, start = c(2024, 1), end = c(2024, 90), frequency = 365)
 
-# ggplot2 kullanarak g??rselle??tirme
+# Time series plot using ggplot2
 ggplot(data.frame(Time = as.Date(365 * (1:90)/365, origin = "2024-01-01"), Magnitude = as.vector(earth_ts)), aes(x = Time, y = Magnitude)) +
   geom_line() +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %d") +
   labs(title = "Earthquake Magnitude (Jan-Mar 2024)", x = "Date", y = "Magnitude")
 
-
-
-# Deprem lokasyonlar??n??n harita ??zerinde g??rselle??tirilmesi
+# Plot the spatial distribution of earthquakes by magnitude
 earth %>%
   ggplot(aes(x = longitude, y = latitude, color = mag)) +
   geom_point() +
   labs(title = "Spatial Distribution of Earthquakes by Magnitude", x = "Longitude", y = "Latitude")
 
-
-
-
-# Clustering i??in magnitude ve depth de??i??kenlerinin se??ilmesi
+# Select variables for clustering (magnitude and depth)
 clustering_vars <- earth %>%
   select(mag, depth)
 
-# Clustering i??in subset al??nmas??
+# Sample a subset of the data for clustering
 set.seed(123)
 subset_earth <- clustering_vars %>%
   sample_n(1000)
 
-# Optimum cluster say??s??na karar verilmesi
+# Determine the optimal number of clusters
+
 # Elbow Method
 fviz_nbclust(subset_earth, kmeans, method = "wss") +
   geom_vline(xintercept = 10, linetype = 2, color = "red") +
@@ -158,17 +153,18 @@ fviz_nbclust(subset_earth, kmeans, method = "silhouette") +
 # Gap Statistic
 fviz_nbclust(subset_earth, kmeans, nstart = 25, method = "gap_stat", nboot = 100)
 
-# 7 adet k??me say??s??na karar verildi.
+# Decided to use 7 clusters
 set.seed(123)
 km_res <- kmeans(subset_earth, centers = 7, nstart = 25)
 
-# K??me etiketleri
+# Add cluster labels to the subset
 subset_earth <- subset_earth %>%
   mutate(cluster = as.factor(km_res$cluster))
 
+# Summary of clustering results
 summary(subset_earth)
 
-# Cluster grafi??i
+# Plot clusters
 ggplot(subset_earth, aes(x = depth, y = mag, color = cluster)) +
   geom_point(alpha = 0.5, size = 2) +
   labs(title = "K-Means Clustering (k = 7)",
@@ -176,12 +172,9 @@ ggplot(subset_earth, aes(x = depth, y = mag, color = cluster)) +
        y = "Magnitude") +
   theme_minimal()
 
-# Her bir k??me i??in ortalama derinlik ve b??y??kl??k
+# Summary of mean depth and magnitude for each cluster
 cluster_summary <- subset_earth %>%
   group_by(cluster) %>%
   summarise(mean_depth = mean(depth), mean_mag = mean(mag))
 
 print(cluster_summary)
-
-
-
